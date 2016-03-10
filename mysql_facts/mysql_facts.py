@@ -6,17 +6,10 @@ module: mysql_facts
 short_description: Extract details from a MySQL database.
 description:
    - list user and host from a MySQL database.
+   - list variables
+   - list schemas
 options:
-  host:
-    description:
-      - the 'host' part of the MySQL username
-    required: false
-    default: localhost
-  password:
-    description:
-      - set the user's password. (Required when adding a user)
-    required: false
-    default: null
+    none
 
 author: "OldKarkass"
 extends_documentation_fragment: mysql
@@ -43,16 +36,35 @@ else:
 class InvalidPrivsError(Exception):
     pass
 
-def user_get(cursor):
+def users_get(cursor):
     cursor.execute("SELECT user,host FROM mysql.user")
-    users_raw = cursor.fetchall()
-    users = []
+    output = cursor.fetchall()
+    results = []
 
-    for user_raw in users_raw:
-        users.append(dict(user=user_raw[0] , host=user_raw[1]) )
+    for line in output:
+        results.append(dict(user=line[0] ,  host=line[1]) )
 
-    result = dict(mysql_users=users)
-    return result
+    return results
+
+def variables_get(cursor):
+    cursor.execute("SHOW variables")
+    output = cursor.fetchall()
+    results = []
+
+    for line in output:
+        results.append(dict(key=line[0],  value=line[1]) )
+
+    return results
+
+def schemas_get(cursor):
+    cursor.execute("SHOW DATABASES")
+    output = cursor.fetchall()
+    results = []
+
+    for line in output:
+        results.append(dict(name=line[0]) )
+
+    return results
 
 # ===========================================
 # Module execution.
@@ -102,7 +114,9 @@ def main():
 
 
     results = { 'ansible_facts': {}  }
-    results['ansible_facts'] = user_get(cursor)
+    results['ansible_facts']['mysql_user'] = users_get(cursor)
+    results['ansible_facts']['mysql_variables'] = variables_get(cursor)
+    results['ansible_facts']['mysql_schemas'] = schemas_get(cursor)
 
     module.exit_json(**results)
 

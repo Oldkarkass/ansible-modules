@@ -42,7 +42,7 @@ def users_get(cursor):
     results = []
 
     for line in output:
-        results.append(dict(user=line[0] ,  host=line[1]) )
+        results.append(dict(user=line[0] , host=line[1]) )
 
     return results
 
@@ -52,7 +52,7 @@ def variables_get(cursor):
     results = []
 
     for line in output:
-        results.append(dict(key=line[0],  value=line[1]) )
+        results.append(line[0]+'='+line[1]) )
 
     return results
 
